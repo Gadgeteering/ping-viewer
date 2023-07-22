@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: macos-latest
+        - os: macos-11
           DEPLOY_PATH: pingviewer-Release.dmg
         - os: ubuntu-latest
           DEPLOY_PATH: pingviewer-Release.AppImage
