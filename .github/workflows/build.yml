@@ -11,11 +11,7 @@ jobs:
         include:
         - os: macos-11
           DEPLOY_PATH: pingviewer-Release.dmg
-        - os: ubuntu-latest
-          DEPLOY_PATH: pingviewer-Release.AppImage
-        - os: windows-latest
-          DEPLOY_PATH: pingviewer-Release.zip
-
+        
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -32,43 +28,11 @@ jobs:
         pip install --user --upgrade pip;
         pip install --user jinja2;
 
-    - name: Build Linux
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt update
-        sudo apt install libxcb-* libfuse-dev
-        ./tools/compile.sh
-        mv /tmp/pingviewer-x86_64.AppImage pingviewer-Release.AppImage
-
     - name: Build Mac
       if: runner.os == 'macOS'
       run: |
         ./tools/compile.sh
         mv /tmp/ping* .
-
-    - name: Build Windows
-      if: runner.os == 'Windows'
-      env:
-        OPENSSL: 'C:\Program Files\OpenSSL\bin'
-        SYSTEM32: 'C:\windows\system32'
-        SYSTEM32_DLLS: 'VCRUNTIME140.dll VCRUNTIME140_1.dll MSVCP140.dll MSVCP140_1.dll'
-      run: |
-        env
-        cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel --target ALL_BUILD --config Release
-        cp build/Release/pingviewer.exe deploy/pingviewer.exe
-        if (($env:OPENSSL) -and (Test-Path $env:OPENSSL -pathType container)) {
-          Copy-Item ${env:OPENSSL}\*.dll -Destination deploy -Force
-        }
-        curl -L https://github.com/bluerobotics/stm32flash-code/releases/download/continuous/stm32flash.exe -o deploy/stm32flash.exe
-        foreach ($I in (${env:SYSTEM32_DLLS} -split ' ')) { copy ${env:SYSTEM32}\$I deploy\ }
-        windeployqt --qmldir qml --release deploy/pingviewer.exe --verbose=2
-
-    - name: Zip windows
-      uses: vimtor/action-zip@v1
-      if: runner.os == 'Windows'
-      with:
-        files: deploy
-        dest: ${{ matrix.DEPLOY_PATH }}
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
